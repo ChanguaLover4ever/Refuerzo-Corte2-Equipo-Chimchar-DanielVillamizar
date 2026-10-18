@@ -541,6 +541,51 @@ Una sola página contiene encabezado, cinco contadores, una tabla con los cinco 
 
 El diseño aporta evidencia visual concreta para cinco heurísticas de Nielsen: la visibilidad se comprueba en contadores, estados por fila y alertas; el control y libertad, en los affordances explícitos de filtrar, buscar y restablecer, delimitados como propuesta visual; la consistencia, en la repetición de las cuatro combinaciones de estado y sus etiquetas; la prevención de errores, en la separación del estado operacional y la alerta de batería, con umbral explicado; y el minimalismo, en la organización de toda la información pertinente en una sola vista sin capacidades ajenas al MVP. Este resultado valida la cobertura de las heurísticas en el mockup; no sustituye pruebas de uso ni verifica el funcionamiento de controles estáticos.
 
+# Reto Chimchar #10 - Organización del MVP en Jira
+
+## Objetivo
+
+Utilizamos Jira para planificar el MVP de SkyCampus y organizar el trabajo de forma que pudiéramos relacionar las necesidades del producto con las tareas necesarias para atenderlas. Esta herramienta nos permitió estructurar el alcance, dividirlo en unidades de trabajo comprensibles y facilitar su seguimiento durante la planificación ágil.
+
+## Estructura utilizada
+
+Organizamos el trabajo siguiendo la jerarquía **Épica → Feature → Historias de Usuario → Subtareas**:
+
+- **Épica:** agrupamos bajo este nivel el objetivo amplio del MVP SkyCampus para mantener una visión general del producto.
+- **Feature:** usamos este nivel para delimitar una capacidad funcional que contribuye a la épica y agrupa historias relacionadas.
+- **Historias de Usuario:** expresamos necesidades desde la perspectiva de un rol y el valor que espera obtener, para orientar el trabajo hacia las personas usuarias.
+- **Subtareas:** desglosamos el trabajo técnico asociado a las historias en actividades más pequeñas, que ayudan a identificar qué se requiere para implementarlas.
+
+## Trabajo realizado
+
+Realizamos manualmente en Jira la organización del MVP: creamos una épica para SkyCampus y una feature relacionada con la gestión de la flota. A partir de esta organización, redactamos historias de usuario con el formato **«Como [rol], quiero [acción], para [beneficio]»** y asociamos subtareas técnicas para desglosar el trabajo necesario.
+
+Las capturas de Jira se incluyen como evidencia de los elementos organizados y permiten consultar los detalles registrados manualmente en el tablero.
+
+## Criterios de aceptación
+
+Consideramos los criterios de aceptación como una guía para dejar claro cuándo una historia satisface la necesidad planteada. Al redactarlos, procuramos que:
+
+- describan resultados observables relacionados con la historia de usuario;
+- sean claros y verificables, evitando expresiones ambiguas;
+- indiquen las condiciones relevantes para considerar atendida la necesidad;
+- permitan al equipo revisar el alcance esperado sin asumir que una tarea ya fue implementada o probada.
+
+La inclusión de estos criterios sirve para orientar la planificación y la validación posterior; no afirmamos aquí resultados de ejecución ni de pruebas.
+
+## Evidencias
+
+Las siguientes capturas documentan la organización del MVP en Jira:
+
+![Vista de la lista de elementos en Jira](docs/jira/list.png)
+![Épica de SkyCampus](docs/jira/epica.png)
+![Feature de gestión de flota](docs/jira/feature.png)
+![Historia de usuario 1](docs/jira/hu01.png)
+![Historia de usuario 2](docs/jira/hu02.png)
+![Historia de usuario 3](docs/jira/hu03.png)
+![Subtarea 1](docs/jira/subtask01.png)
+![Subtarea 2](docs/jira/subtask02.png)
+
 # Reto Chimchar #11 - Diagrama de Casos de Uso
 
 El diagrama delimita **SkyCampus MVP** y representa el caso central SC-01, Registrar misión de reparto, junto con las consultas y responsabilidades administrativas requeridas para el MVP. Los actores son externos al límite del sistema y las relaciones muestran las interacciones con los casos de uso.
@@ -579,6 +624,74 @@ El MVP se implementa como lógica de dominio local, sin presuponer interfaz grá
 ## Justificación del modelo
 
 El diagrama centra el flujo en SC-01 y separa sus comprobaciones obligatorias de las consultas que pueden realizar los actores. Conserva los roles y casos de uso solicitados, reutiliza las reglas y consultas presentes en Chimchar y limita la extensión a la condición de batería crítica que el dominio ya contempla. No presupone interfaces, integraciones ni automatizaciones, y presenta las responsabilidades administrativas únicamente con el alcance establecido para el MVP.
+
+# Reto Chimchar #12 - Diseño asistido por IA
+
+## Objetivo
+
+Validar conceptualmente el diseño visual del panel de monitoreo de SkyCampus utilizando IA generativa como apoyo para explorar alternativas en una etapa temprana. La revisión se centra en la claridad de la información operativa y en cómo el operador podría reconocer el estado de la flota; no constituye una implementación funcional ni una validación con usuarios.
+
+## Proceso seguido
+
+1. **Investigación de referencias visuales:** se revisaron referencias de paneles de monitoreo y tableros operativos para orientar la organización de la información y la jerarquía visual.
+2. **Uso del manual de identidad:** se tomó como guía el [manual de identidad visual](docs/ui/manual-identidad.md), incluyendo la paleta, la tipografía, el tono y la representación textual y cromática de los estados.
+3. **Extracción de información del RF SC-01:** se consultaron los requisitos de validación de una misión (RF-01) y el caso de uso de registro de misión (SC-01) para reconocer las reglas y los datos del dominio pertinentes. Se mantuvieron diferenciados los umbrales de batería para asignación de misiones y el umbral de batería crítica usado en la consulta de flota.
+4. **Construcción de prompts detallados:** se estructuraron instrucciones para orientar las propuestas con el propósito del panel, la identidad de SkyCampus, los datos que debían visualizarse y los estados que se querían explorar.
+5. **Generación de propuestas visuales:** se exploraron propuestas visuales con IA generativa como apoyo para revisar distintas representaciones del panel. Las imágenes disponibles se adjuntan en la sección de evidencias; no se atribuyen a la IA resultados que no estén documentados.
+
+## Diseño evaluado
+
+La evaluación se enfocó en la representación de los elementos necesarios para comprender la flota y apoyar la tarea del operador:
+
+- Estado operacional de los drones, con etiquetas comprensibles.
+- Ubicación de cada dron dentro del campus.
+- Nivel de batería expresado numéricamente.
+- Alertas que destaquen condiciones que requieren atención y su criterio.
+- Acciones disponibles para el operador, presentadas de forma reconocible y coherente con el alcance del sistema.
+
+Se consideraron tres situaciones para organizar la revisión de las propuestas: una vista normal de la flota, una situación con alerta y una vista sin drones disponibles. Hay imágenes disponibles para los dos primeros escenarios; la evidencia de la vista sin drones disponibles queda pendiente.
+
+## Heurísticas de Nielsen consideradas
+
+Durante la construcción del mockup se consideraron las siguientes heurísticas como criterios para revisar la legibilidad y el uso del panel:
+
+- **Visibilidad del estado del sistema:** comprobar si el estado operacional, la batería y las alertas se distinguen con facilidad.
+- **Correspondencia entre el sistema y el mundo real:** usar nombres de estados y ubicaciones que tengan sentido para la operación de SkyCampus.
+- **Control y libertad del usuario:** revisar si las acciones del operador se identifican claramente y si la vista comunica cómo continuar ante los escenarios representados.
+- **Consistencia y estándares:** mantener una presentación uniforme para estados, etiquetas, datos y acciones.
+- **Prevención de errores:** diferenciar las alertas de batería de las reglas de asignación de misiones para evitar interpretaciones incorrectas.
+- **Reconocimiento antes que recuerdo:** presentar los datos de flota necesarios en la vista, sin depender de que el operador recuerde información de otra pantalla.
+- **Diseño estético y minimalista:** priorizar la información pertinente para el monitoreo y evitar elementos que distraigan de ella.
+
+Estos criterios orientan la revisión visual; no implican que se haya realizado una prueba de usabilidad con operadores.
+
+## Prompt utilizado
+
+### Prompt
+
+[Pegar prompt utilizado aquí]
+
+## Evidencias
+
+### Estado normal
+
+![Mockup de estado normal del panel de monitoreo](docs/ui/mockups/reto12.png)
+
+### Estado de alerta
+
+![Mockup del panel de monitoreo con alerta de batería](docs/ui/mockups/alerta.png)
+
+### Estado sin drones disponibles
+
+[Insertar imagen aquí]
+
+## Análisis
+
+Documentar aquí las observaciones al revisar las propuestas: claridad de la información, consistencia con el manual de identidad, facilidad para identificar alertas y acciones, diferencias entre alternativas y ajustes que convendría realizar. Registrar únicamente observaciones que puedan verificarse en las evidencias incorporadas.
+
+## Conclusiones
+
+La IA generativa puede servir como herramienta de apoyo en etapas tempranas de diseño: ayuda a explorar enfoques visuales y a hacer más concreta la conversación sobre jerarquía, estados y necesidades del operador. Sus propuestas deben contrastarse con los requisitos, las reglas del dominio y la identidad visual del proyecto. La herramienta no sustituye el criterio del equipo ni la validación con usuarios, y cualquier observación sobre una propuesta debe sustentarse en una evidencia disponible.
 
 # Reto Chimchar #13 - TDD
 
