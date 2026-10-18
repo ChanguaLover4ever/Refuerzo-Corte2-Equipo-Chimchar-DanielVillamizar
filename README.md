@@ -579,3 +579,97 @@ El MVP se implementa como lógica de dominio local, sin presuponer interfaz grá
 ## Justificación del modelo
 
 El diagrama centra el flujo en SC-01 y separa sus comprobaciones obligatorias de las consultas que pueden realizar los actores. Conserva los roles y casos de uso solicitados, reutiliza las reglas y consultas presentes en Chimchar y limita la extensión a la condición de batería crítica que el dominio ya contempla. No presupone interfaces, integraciones ni automatizaciones, y presenta las responsabilidades administrativas únicamente con el alcance establecido para el MVP.
+
+# Reto Chimchar #13 - TDD
+
+Este informe describe el proceso de implementación de `ValidadorMision` mediante desarrollo guiado por pruebas (Test-Driven Development, TDD). El trabajo se organizó en ciclos de Red, Green y Refactor: primero se definieron los comportamientos esperados, después se añadió la implementación mínima para satisfacerlos y, finalmente, se mejoró la organización del código sin alterar lo que observan sus usuarios.
+
+## Red
+
+Antes de implementar la lógica de `ValidadorMision`, se plantearon pruebas para especificar el comportamiento de sus tres operaciones: `tieneBateriaSuficiente`, `validarDestino` y `droneEstaDisponible`. En conjunto, los casos comprueban tanto situaciones válidas como límites y entradas no válidas: batería en el mínimo requerido, batería por debajo del mínimo y dron nulo; un destino reconocido, uno desconocido y un destino nulo; y drones disponibles, en otros estados operativos o nulos.
+
+Al ejecutarse en esta primera etapa, las pruebas fallaban porque la funcionalidad todavía no existía: no se contaba con la implementación de `ValidadorMision` y sus reglas. El fallo inicial era, por tanto, el resultado esperado de la etapa Red: las pruebas expresaban el contrato pendiente de cumplir y hacían visibles los comportamientos necesarios antes de escribir el código.
+
+## Green
+
+Para pasar a Green se implementó únicamente la lógica necesaria para satisfacer ese contrato. `tieneBateriaSuficiente` verifica que el dron exista y alcance el umbral mínimo de batería del 30 %. `validarDestino` acepta los destinos presentes en el catálogo del campus y lanza `DestinoInvalidoException` cuando recibe un destino nulo o desconocido. `droneEstaDisponible` comprueba que el dron exista y que su estado permita utilizarlo.
+
+Con esta implementación mínima, cada prueba pudo ejecutarse contra las reglas correspondientes. Mantener el alcance acotado a los comportamientos descritos por las pruebas permitió avanzar sin añadir funcionalidades ajenas al validador.
+
+## Refactor
+
+Una vez satisfechas las pruebas, el código se organizó para hacer más claras y consistentes las reglas. El umbral de batería se expresa mediante la constante `BATERIA_MINIMA`, y el catálogo de destinos se centraliza en una colección inmutable. Además, las comprobaciones de nulidad quedan explícitas en los métodos que reciben drones o destinos. Estos cambios mejoran la legibilidad y reducen la dispersión de valores y reglas, pero conservan el comportamiento observable: para las mismas entradas se mantienen los mismos resultados y excepciones.
+
+## Patrón AAA
+
+El patrón AAA estructura una prueba en tres momentos:
+
+- **Arrange (Preparar):** se construyen los datos necesarios y se establece el contexto de la prueba.
+- **Act (Actuar):** se ejecuta el método cuyo comportamiento se quiere verificar.
+- **Assert (Comprobar):** se contrasta el resultado obtenido con el esperado.
+
+El siguiente caso está tomado de `ValidadorMisionTest`:
+
+```java
+@Test
+void bateriaDeTreintaPorCientoEsSuficiente() {
+    assertTrue(validador.tieneBateriaSuficiente(drone(30, EstadoDrone.DISPONIBLE)));
+}
+```
+
+En **Arrange**, `setUp` prepara una instancia de `ValidadorMision` antes de cada prueba y `drone(30, EstadoDrone.DISPONIBLE)` proporciona un dron con la batería en el mínimo. En **Act**, se invoca `tieneBateriaSuficiente` con ese dron. En **Assert**, `assertTrue` comprueba que el validador lo considere suficiente. El ejemplo muestra que las tres fases pueden identificarse en una prueba concisa, aunque la preparación y la ejecución estén escritas dentro de la misma expresión.
+
+## Resultado
+
+La ejecución de la suite de `ValidadorMisionTest` reportó **11 pruebas ejecutadas y 0 fallos**. Los métodos cubiertos por estos casos son `tieneBateriaSuficiente`, `validarDestino` y `droneEstaDisponible`. La variedad de entradas comprobadas respalda tanto los resultados positivos como el manejo de límites, estados no disponibles y valores nulos definidos para el validador.
+
+# Reto Chimchar #14 - Calidad de Código
+
+Este reto revisa la cobertura de pruebas con JaCoCo y el estado de calidad estática con SonarQube. La revisión priorizó conservar las reglas del dominio y corregir únicamente los problemas sustentados por los reportes, sin retirar lógica productiva para mejorar métricas.
+
+## Cobertura inicial
+
+Antes de ampliar las pruebas, `mvn verify` ejecutó 65 pruebas sin fallos. El reporte inicial de JaCoCo ya superaba el umbral solicitado: **100 % de cobertura de instrucciones, líneas y ramas**. En el resumen se analizaron 891 instrucciones, 198 líneas, 126 ramas y 22 clases; no había elementos sin cubrir. Por esta razón no se añadió lógica artificial ni se modificó el código de producción para perseguir un porcentaje mayor.
+
+## Cobertura final
+
+Se añadieron seis casos para comprobar `valueOf()` en los tres enums: la resolución de un valor existente y el rechazo de un nombre desconocido. La suite final ejecuta **71 pruebas, con 0 fallos**. JaCoCo conserva **100 % de cobertura de instrucciones, líneas y ramas**, con 891 instrucciones cubiertas, 198 líneas cubiertas y 126 ramas cubiertas en 22 clases.
+
+Los tests existentes, revisados junto con JaCoCo, también cubren las validaciones solicitadas para `Drone` y `Mision`, la construcción y los errores del `MisionBuilder`, ambas estrategias de asignación y las aprobaciones y rechazos de la cadena por batería, destino y carga. El reporte HTML generado queda en `target/site/jacoco/index.html`; la exportación XML para SonarQube está en `target/site/jacoco/jacoco.xml`.
+
+## Hallazgos SonarQube
+
+Se ejecutó el análisis disponible en SonarQube for IDE sobre los archivos fuente Java de producción. La vista de problemas reportó dos Code Smells en `ConsultasFlota`; después de corregirlos, la revisión del IDE no mostró problemas pendientes.
+
+### Bugs encontrados
+
+El análisis local disponible no reportó bugs. La revisión se limitó a los diagnósticos del análisis por archivo en el IDE; no se recibió un informe de Quality Gate de SonarQube Server o SonarQube Cloud.
+
+### Vulnerabilities encontradas
+
+El análisis local disponible no presentó vulnerabilidades en la vista de problemas. Sin embargo, el reporte de Security Hotspots y taint vulnerabilities de SonarQube requiere Connected Mode. No fue posible obtenerlo: no hay un servidor respondiendo en `http://localhost:9000` y el workspace no está enlazado a un proyecto remoto. Por lo tanto, no se afirma que el contador de vulnerabilidades abiertas del servidor sea cero; esa verificación queda pendiente de ejecutar con una instancia conectada.
+
+### Code Smells encontrados
+
+SonarQube for IDE señaló dos usos de `Collectors.toList()` en `ConsultasFlota`: uno al obtener los identificadores disponibles y otro al generar el resumen de batería. El impacto era de mantenibilidad y consistencia con las API actuales de Stream, no de una regla de negocio incorrecta. Se reemplazaron por `Stream.toList()` y se envolvieron los resultados en `ArrayList`, conservando la capacidad de modificación que tenían las listas devueltas por la implementación previa.
+
+Para preparar un análisis con SonarQube Scanner se añadió `sonar-project.properties`, con las rutas de fuentes, tests, clases compiladas y el reporte XML de JaCoCo. Con un servidor SonarQube local disponible, los comandos son:
+
+```bash
+mvn verify
+sonar-scanner -Dsonar.host.url=http://localhost:9000
+```
+
+El scanner requiere que la instancia de SonarQube esté iniciada y que la autenticación, si aplica, se configure de forma segura fuera del repositorio. En este entorno no están instalados `sonar-scanner` ni un servidor local, de modo que no se pudo ejecutar el análisis de servidor ni producir una captura real de su dashboard.
+
+## Refactorizaciones realizadas
+
+- Se actualizaron dos operaciones de Stream en `ConsultasFlota` para usar `toList()`. El envoltorio con `ArrayList` mantiene las listas modificables y preserva el contenido y el orden de los resultados.
+- Se añadieron pruebas de éxito y error para `valueOf()` de `EstadoDrone`, `EstadoMision` y `TipoCarga`, sin alterar los enums.
+- No se eliminó lógica productiva. Los resultados funcionales de las consultas y las reglas de validación permanecen iguales.
+
+## Evidencias
+
+- Captura del resumen de JaCoCo: [docs/quality/captura-jacoco.png](docs/quality/captura-jacoco.png).
+- Reporte HTML completo: [target/site/jacoco/index.html](target/site/jacoco/index.html).
+- Captura de SonarQube: pendiente; no hay dashboard de servidor disponible en este entorno. No se añadió una imagen sustitutiva para evitar presentar como evidencia una captura que no provenga de un análisis real.
