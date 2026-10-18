@@ -333,3 +333,120 @@ Un RNF sin métrica ni forma de verificación no proporciona un criterio de acep
 La especificación separa las capacidades que sostienen el flujo principal —validar y asignar misiones— de las consultas operativas que lo complementan. También establece umbrales medibles para evaluar la calidad del código y el desempeño local, y deja constancia de que el acceso concurrente por red no forma parte de esta versión.
 
 Esta priorización acota el trabajo del equipo: orienta la implementación y las pruebas hacia comportamientos que ya pertenecen al dominio de SkyCampus, diferencia las mejoras aplazables y evita presentar como disponibles una interfaz gráfica, una API o integraciones que Chimchar todavía no incorpora. Así, los requisitos ofrecen una base verificable para aceptar el MVP y para decidir con fundamento qué podría considerarse en una versión posterior.
+
+# Reto Chimchar #8 - Plantilla DOSW
+
+## Código
+
+SC-01
+
+## Nombre
+
+Registrar misión de reparto de documento
+
+## Actor
+
+Operador de drones.
+
+## Objetivo
+
+Permitir que el operador registre una solicitud de reparto de un documento y conozca qué drone disponible quedó asignado. Este requerimiento satisface la necesidad operativa de coordinar la entrega dentro del campus, dejando la misión identificada y en un estado inicial consultable. La validación de las restricciones evita aceptar una asignación que no pueda realizarse de acuerdo con las condiciones vigentes de la flota y del campus.
+
+## Descripción
+
+El operador solicita el registro de una misión e informa el origen, el destino y el tipo de carga. SkyCampus recibe la flota disponible y aplica la estrategia de asignación configurada para seleccionar un drone en estado `DISPONIBLE`. Antes de confirmar la operación, el sistema comprueba que los datos obligatorios estén presentes, que el identificador de misión no esté repetido, que el destino pertenezca al catálogo permitido y que el drone asignado cumpla los mínimos de batería correspondientes al tipo de carga. Si las verificaciones tienen éxito, registra la misión en estado `PENDIENTE` y devuelve el objeto de misión; si alguna falla, informa la causa y no confirma un registro exitoso.
+
+En el MVP actual, la operación se ejecuta localmente, sin presuponer una interfaz gráfica o un servicio de red. El servicio de asignación recibe el identificador de misión como dato de entrada, selecciona el drone de acuerdo con una estrategia ya configurada y notifica la asignación; la implementación de consola deja una alerta con los identificadores de la misión y del drone.
+
+El dominio dispone de validadores para las restricciones de batería, destino y carga descritas en RF-01. SC-01 requiere que esas validaciones se apliquen a la misión antes de guardarla, de modo que una operación rechazada no produzca un registro confirmado.
+
+## Precondiciones
+
+1. SkyCampus debe tener cargada la flota que el sistema utilizará al asignar la misión.
+2. La solicitud de registro debe contar con un identificador de misión, un origen, un destino y un tipo de carga informados.
+3. Debe existir al menos un drone en estado `DISPONIBLE` en la flota recibida por la operación.
+4. Debe estar configurada una estrategia de asignación y un mecanismo de registro y notificación para que el sistema pueda completar la operación.
+
+Una precondición describe una condición del contexto que debe cumplirse antes de iniciar el caso de uso para que este pueda ejecutarse. Una regla de negocio, en cambio, expresa una restricción propia del dominio que el sistema evalúa sobre la solicitud durante el caso de uso y que puede provocar su rechazo. Por ejemplo, contar con una flota cargada es una precondición; el umbral de batería y la pertenencia del destino al catálogo son reglas de negocio, no requisitos que deba resolver una interfaz.
+
+## Datos de entrada
+
+- `id:String`: identificador no vacío de la misión que proporciona el proceso invocador. Debe ser único en el repositorio; el servicio de asignación del MVP lo recibe como parámetro y rechaza un identificador ya registrado.
+- `drones:List<Drone>`: flota que se entrega a la estrategia de asignación. Cada elemento tiene la estructura:
+
+  ```text
+  Drone(
+      id:String,
+      modelo:String,
+      bateria:int,             // porcentaje entero entre 0 y 100
+      estado:EstadoDrone,      // DISPONIBLE, EN_VUELO, EN_CARGA o FALLO
+      ubicacion:String
+  )
+  ```
+
+- `origen:String`: ubicación desde la cual se inicia el reparto. Es obligatoria y no puede estar vacía.
+- `destino:String`: ubicación de entrega. Es obligatoria y debe pertenecer al catálogo de destinos válidos del campus.
+- `tipoCarga:TipoCarga`: tipo de documento transportado, con los valores `SOBRE`, `CARPETA` o `LIBRO`.
+
+La estrategia de asignación se configura en el servicio y no es un dato que el operador deba seleccionar como parte de esta solicitud. El MVP no define prioridad ni otros atributos opcionales para la misión.
+
+## Datos de salida
+
+La operación devuelve la misión registrada con la siguiente estructura:
+
+```text
+Mision(
+    id:String,
+    drone:Drone,
+    origen:String,
+    destino:String,
+    tipoCarga:TipoCarga,
+    estado:EstadoMision
+)
+```
+
+`drone` contiene el objeto asignado con los atributos `id:String`, `modelo:String`, `bateria:int`, `estado:EstadoDrone` y `ubicacion:String`. Al completar correctamente el registro, `estado` toma el valor `PENDIENTE`. El operador recibe el objeto de misión con sus datos y una notificación de la asignación; en la implementación de consola, esta notificación informa el identificador de la misión y el identificador del drone asignado. Si la operación es rechazada, no se devuelve una confirmación de misión registrada y se comunica la causa del rechazo.
+
+## Flujo básico
+
+1. El operador solicita registrar una misión e informa su identificador, el origen, el destino y el tipo de carga junto con la flota que se considerará para la asignación.
+2. El sistema recibe la solicitud y entrega la flota a la estrategia configurada, que selecciona un drone cuyo estado es `DISPONIBLE`.
+3. El sistema valida que los datos obligatorios estén presentes, que el identificador no exista previamente y que el destino y la batería cumplan las reglas del dominio para el tipo de carga solicitado.
+4. El sistema crea la misión con el drone seleccionado y el estado `PENDIENTE`, y la guarda en el repositorio de misiones.
+5. El sistema devuelve la misión registrada y notifica al operador los identificadores de la misión y del drone asignado.
+
+## Flujos alternos
+
+### FA-01 Drone sin batería suficiente
+
+1. El operador solicita registrar la misión e informa los datos requeridos y la flota.
+2. La estrategia selecciona un drone disponible, pero su batería es inferior al mínimo exigido para la solicitud: 30 % para una carga general o 50 % si el tipo de carga es `LIBRO`.
+3. El sistema informa que el drone no cumple el nivel mínimo de batería y no guarda ni notifica la misión como registrada.
+4. El operador puede presentar una nueva solicitud con una flota o una asignación que incluya un drone disponible con batería suficiente.
+5. El sistema solo confirma el registro cuando una nueva validación satisface el umbral aplicable.
+
+### FA-02 Destino inválido
+
+1. El operador solicita registrar la misión e informa el identificador, el origen, un destino y el tipo de carga.
+2. El sistema asigna un drone disponible conforme a la estrategia configurada y valida el destino informado.
+3. El destino no coincide con una ubicación del catálogo permitido (`Bloque A`, `Bloque B`, `Bloque C`, `Bloque D` o `Biblioteca`), por lo que el sistema informa que el destino no existe en el campus.
+4. El sistema no guarda ni notifica la misión como registrada.
+5. El operador corrige el destino y presenta de nuevo la solicitud; el sistema continúa el registro únicamente si las demás reglas también se cumplen.
+
+## Reglas de negocio
+
+**RN-01 — Batería mínima para asignar una misión:** el drone asignado debe tener una batería igual o superior al 30 %. Esta condición protege la operación de reparto y se evalúa en la lógica de dominio; no depende de cómo una pantalla represente o capture el porcentaje.
+
+**RN-02 — Batería mínima para transportar libros:** cuando `tipoCarga` es `LIBRO`, el drone asignado debe tener una batería igual o superior al 50 %. El umbral diferencia el esfuerzo operativo requerido por esa carga y debe mantenerse aunque la solicitud se origine desde otra interfaz o proceso.
+
+**RN-03 — Destino perteneciente al campus:** el destino debe ser uno de los valores permitidos por el catálogo actual: `Bloque A`, `Bloque B`, `Bloque C`, `Bloque D` o `Biblioteca`. La restricción define dónde puede realizarse una entrega en el dominio SkyCampus y debe validarse en el sistema, no confiarse a que una interfaz limite las opciones que el operador pueda introducir.
+
+## Criterios de aceptación
+
+- Ante una solicitud válida con un drone disponible que cumpla el umbral de batería aplicable, el sistema registra y devuelve una misión en estado `PENDIENTE`.
+- Cada misión registrada tiene un identificador no vacío y único; una solicitud cuyo identificador ya exista se rechaza sin crear un segundo registro.
+- No se registra la misión si el drone asignado tiene menos de 30 % de batería.
+- No se registra una misión de tipo `LIBRO` si el drone asignado tiene menos de 50 % de batería; una batería exactamente igual al umbral aplicable sí satisface la regla.
+- No se registra una misión cuyo destino no pertenezca al catálogo permitido, y el rechazo informa la causa.
+- Si la flota no contiene drones en estado `DISPONIBLE`, el sistema informa que no hay drones para asignar y no registra la misión.
+- Cuando el registro termina correctamente, el resultado permite identificar el drone asignado, el origen, el destino, el tipo de carga y el estado inicial, y la notificación de consola identifica la misión y el drone.
