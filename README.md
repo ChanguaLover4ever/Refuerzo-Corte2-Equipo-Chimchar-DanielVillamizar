@@ -450,3 +450,91 @@ Mision(
 - No se registra una misión cuyo destino no pertenezca al catálogo permitido, y el rechazo informa la causa.
 - Si la flota no contiene drones en estado `DISPONIBLE`, el sistema informa que no hay drones para asignar y no registra la misión.
 - Cuando el registro termina correctamente, el resultado permite identificar el drone asignado, el origen, el destino, el tipo de carga y el estado inicial, y la notificación de consola identifica la misión y el drone.
+
+# Reto Chimchar #9 - UX/UI
+
+## Propósito y alcance
+
+El reto define una identidad visual coherente para SkyCampus y la aplica a un panel único de monitoreo de flota. El panel se presenta como un **mockup estático**, no como una funcionalidad ya desplegada: representa exclusivamente los campos y estados del modelo actual (`id`, `modelo`, `bateria`, `ubicacion` y `estado`). Sus cinco filas corresponden a los drones D-01 a D-05 del conjunto de prueba `ConsultasFlotaTest`, y los cinco comparten el modelo `DJI Mini 3`. Por ello, los valores son una referencia reproducible del proyecto; no indican posiciones ni telemetría en tiempo real.
+
+## Entregables
+
+- [Manual de identidad visual](docs/ui/manual-identidad.md): criterios de marca, paleta, estados, tipografía y comunicación.
+- [Panel editable en draw.io](docs/ui/panel-monitoreo.drawio): un único diagrama, con componentes editables.
+- [Captura PNG del panel](docs/ui/panel-monitoreo.png): exportación visual de la misma vista editable.
+
+## Identidad visual aplicada
+
+SkyCampus nombra una plataforma de gestión y monitoreo de drones para el reparto de documentos dentro del campus. La interfaz usa `#16324F` como azul primario para comunicar confianza y estructurar el encabezado; `#526477` como secundario para información de apoyo; y `#0F766E` como acento de identidad. El fondo `#F4F7FB`, las superficies `#FFFFFF` y el texto `#0F172A` mantienen una lectura clara y una jerarquía visible. Los bordes `#E2E8F0` separan bloques sin competir con su contenido.
+
+Los cuatro colores operacionales corresponden a los estados de `EstadoDrone`: **Disponible** (`#15803D`, fondo `#DCFCE7`), **En vuelo** (`#2563EB`, fondo `#DBEAFE`), **En carga** (`#D97706`, fondo `#FEF3C7`) y **Fallo** (`#DC2626`, fondo `#FEE2E2`). Cada indicador del panel muestra también el nombre del estado; por lo tanto, su interpretación no depende de distinguir colores. El número de batería y su barra se muestran juntos para que el dato siga siendo legible sin inferirlo únicamente del color.
+
+La tipografía de interfaz es sans-serif, con la pila `Inter, Roboto, Segoe UI`. Estas familias favorecen la lectura sostenida de etiquetas, porcentajes y ubicaciones, y las alternativas permiten conservar una presentación familiar si Inter no está disponible. Los ID de drones usan una fuente monoespaciada para distinguir visualmente los identificadores técnicos. La comunicación evita ambigüedades y utiliza mensajes breves, directos y compatibles con el lenguaje del dominio: por ejemplo, «Misión M-01 asignada al drone D-01» y «El drone debe tener al menos 30% de batería».
+
+## Panel de monitoreo de la flota
+
+La cabecera identifica el producto y la vista. Debajo, cinco indicadores resumen el total de drones y la cantidad en cada uno de los cuatro estados; la tabla permite comparar ID, modelo, batería, ubicación y estado en un solo lugar. La zona final de alertas señala D-04 (18 %) y D-05 (12 %), ambos por debajo del umbral de batería crítica de la consulta de flota (`<20 %`). Este umbral se refiere a `contarDronesConBateriaCritica` y no debe confundirse con las reglas de asignación de misiones, que exigen un mínimo del 30 % —o del 50 % para carga `LIBRO`.
+
+Los datos del panel pueden contrastarse con la flota de prueba de `ConsultasFlotaTest`: D-01 registra 85 % y Bloque A; D-02, 92 % y Bloque C; D-03, 50 % y Bloque C; D-04, 18 % y Bloque B; y D-05, 12 % y Biblioteca. El modelo de cada registro es `DJI Mini 3`, de acuerdo con el helper de la prueba. La nota visible en el propio mockup delimita la vista como referencia y evita presentarla como telemetría en vivo.
+
+![Mockup del panel de monitoreo de SkyCampus con cinco drones, estados y alertas de batería.](docs/ui/panel-monitoreo.png)
+
+El archivo [panel-monitoreo.drawio](docs/ui/panel-monitoreo.drawio) permite inspeccionar y editar individualmente los elementos que componen esa captura. Se diseña una sola vista; los controles dibujados para filtrar, buscar o restablecer son affordances del mockup para evaluar el control del operador, no afirmaciones de que esas interacciones estén implementadas en el MVP.
+
+## Análisis y validación con las heurísticas de Nielsen
+
+La siguiente evaluación contrasta cinco heurísticas con evidencias localizables en la única vista del mockup. Se trata de una validación del diseño propuesto, no de una afirmación de que se hayan ejecutado pruebas con operadores.
+
+## 1. Visibilidad del estado del sistema
+
+### Cómo se aplica en el panel
+
+El operador necesita reconocer la composición de la flota y la condición de cada dron sin deducirla ni cambiar de pantalla. Por eso, el resumen cuantifica los estados y la tabla presenta el estado actual de referencia junto con su batería y ubicación. La sección de alertas reúne los niveles inferiores al 20 % identificados por la consulta existente.
+
+### Evidencia en el diseño
+
+En la parte superior aparecen el total (5) y los contadores Disponibles (2), En vuelo (1), En carga (1) y Fallo (1). Las cinco filas indican batería y estado por nombre. En la zona «Alertas de batería» aparecen D-04 (18 %) y D-05 (12 %). La leyenda de referencia del panel aclara que los valores no son telemetría en tiempo real.
+
+## 2. Control y libertad del usuario
+
+### Cómo se aplica en el panel
+
+La vista propone affordances visibles para acotar la tabla por estado, localizar un ID y restablecer la selección. «Todos los estados» representa una vista sin filtro; «Restablecer» sugiere una salida para regresar a ella. Esto da al operador una ruta de control reconocible sin ocultar de forma permanente el contexto de la flota.
+
+### Evidencia en el diseño
+
+Sobre la tabla se dibujan el selector «Todos los estados», el campo «Buscar por ID» y la acción «Restablecer». Están presentes como controles visuales en un mockup estático; no se atribuye al MVP una búsqueda, filtrado o interacción que el proyecto aún no implementa.
+
+## 3. Consistencia y estándares
+
+### Cómo se aplica en el panel
+
+Un estado debe conservar su asociación semántica y cromática en toda la vista para que el operador no aprenda una codificación distinta por sección. Las etiquetas siguen los nombres del dominio, mientras que los colores diferencian de forma estable los cuatro estados. Los datos técnicos y los datos de lectura general también mantienen tratamientos tipográficos distintos.
+
+### Evidencia en el diseño
+
+Disponible siempre aparece en verde, En vuelo en azul, En carga en ámbar y Fallo en rojo, tanto en los contadores superiores como en las etiquetas de la tabla y las referencias dentro de las alertas. Cada color se acompaña de texto; los ID, como `D-01`, se componen en monoespaciada.
+
+## 4. Prevención de errores
+
+### Cómo se aplica en el panel
+
+La interfaz evita confundir una batería baja con el estado operacional del dron: comunica ambos datos por separado y hace explícito el umbral usado para la alerta. Esta diferenciación reduce el riesgo de interpretar «En carga» como «Disponible» o de confundir la alerta de consulta con las reglas de asignación de una misión.
+
+### Evidencia en el diseño
+
+D-04 conserva la etiqueta En carga y D-05 la etiqueta Fallo, aunque ambos figuren en «Alertas de batería» por tener 18 % y 12 %, respectivamente. Cada fila muestra el porcentaje numérico y una barra. La leyenda especifica «inferior al 20 %», y el README diferencia ese umbral de asignación (30 % o 50 % para `LIBRO`). No se presenta la alerta como una decisión automática ni como autorización para asignar un dron.
+
+## 5. Diseño estético y minimalista
+
+### Cómo se aplica en el panel
+
+El mockup prioriza las tareas informativas del operador: revisar el total, localizar un dron, comparar su condición y advertir niveles de batería críticos. No añade vistas o componentes que desplacen esa lectura ni incorpora capacidades futuras fuera del alcance.
+
+### Evidencia en el diseño
+
+Una sola página contiene encabezado, cinco contadores, una tabla con los cinco datos requeridos y una sección de alertas. El fondo y las tarjetas separan grupos; los bordes son discretos y las etiquetas de estado aparecen donde aportan información. No se incluyen mapa, telemetría en vivo, monitoreo remoto, IA ni automatizaciones.
+
+### Resultado de la validación
+
+El diseño aporta evidencia visual concreta para cinco heurísticas de Nielsen: la visibilidad se comprueba en contadores, estados por fila y alertas; el control y libertad, en los affordances explícitos de filtrar, buscar y restablecer, delimitados como propuesta visual; la consistencia, en la repetición de las cuatro combinaciones de estado y sus etiquetas; la prevención de errores, en la separación del estado operacional y la alerta de batería, con umbral explicado; y el minimalismo, en la organización de toda la información pertinente en una sola vista sin capacidades ajenas al MVP. Este resultado valida la cobertura de las heurísticas en el mockup; no sustituye pruebas de uso ni verifica el funcionamiento de controles estáticos.
