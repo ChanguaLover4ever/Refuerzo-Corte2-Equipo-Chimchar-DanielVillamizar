@@ -481,6 +481,8 @@ Los datos del panel pueden contrastarse con la flota de prueba de `ConsultasFlot
 
 El archivo [panel-monitoreo.drawio](docs/ui/panel-monitoreo.drawio) permite inspeccionar y editar individualmente los elementos que componen esa captura. Se diseña una sola vista; los controles dibujados para filtrar, buscar o restablecer son affordances del mockup para evaluar el control del operador, no afirmaciones de que esas interacciones estén implementadas en el MVP.
 
+Figma: https://www.figma.com/make/1bMJLQm8JGMjiOmmjvsoM3/Flota-panel-de-monitoreo?t=R4leihCl2nyEIWi0-1
+
 ## Análisis y validación con las heurísticas de Nielsen
 
 La siguiente evaluación contrasta cinco heurísticas con evidencias localizables en la única vista del mockup. Se trata de una validación del diseño propuesto, no de una afirmación de que se hayan ejecutado pruebas con operadores.
@@ -538,3 +540,42 @@ Una sola página contiene encabezado, cinco contadores, una tabla con los cinco 
 ### Resultado de la validación
 
 El diseño aporta evidencia visual concreta para cinco heurísticas de Nielsen: la visibilidad se comprueba en contadores, estados por fila y alertas; el control y libertad, en los affordances explícitos de filtrar, buscar y restablecer, delimitados como propuesta visual; la consistencia, en la repetición de las cuatro combinaciones de estado y sus etiquetas; la prevención de errores, en la separación del estado operacional y la alerta de batería, con umbral explicado; y el minimalismo, en la organización de toda la información pertinente en una sola vista sin capacidades ajenas al MVP. Este resultado valida la cobertura de las heurísticas en el mockup; no sustituye pruebas de uso ni verifica el funcionamiento de controles estáticos.
+
+# Reto Chimchar #11 - Diagrama de Casos de Uso
+
+El diagrama delimita **SkyCampus MVP** y representa el caso central SC-01, Registrar misión de reparto, junto con las consultas y responsabilidades administrativas requeridas para el MVP. Los actores son externos al límite del sistema y las relaciones muestran las interacciones con los casos de uso.
+
+![Diagrama UML de casos de uso de SkyCampus MVP](docs/use-cases/cu-skycampus.png)
+
+Fuente editable: [cu-skycampus.drawio](docs/use-cases/cu-skycampus.drawio). Exportación PNG: [cu-skycampus.png](docs/use-cases/cu-skycampus.png).
+
+## Actores identificados
+
+- **Operador de drones:** registra misiones, consulta la flota disponible y revisa el estado de una misión.
+- **Solicitante:** consulta el estado de la misión asociada a su solicitud.
+- **Administrador:** configura los destinos válidos y gestiona la flota de drones.
+
+Los tres actores se muestran fuera del rectángulo de SkyCampus porque representan roles que interactúan con el sistema, no componentes internos.
+
+## Casos de uso principales
+
+- **Registrar misión:** es el objetivo de SC-01. El registro selecciona un dron disponible y solo puede confirmarse si se cumplen las reglas de la misión.
+- **Consultar flota disponible:** permite al operador identificar los drones disponibles; corresponde a la consulta de candidatos implementada en el dominio.
+- **Consultar estado de misión:** permite consultar el estado registrado de una misión.
+- **Configurar destinos válidos** y **Gestionar flota de drones:** representan las responsabilidades administrativas indicadas para el MVP, sin añadir operaciones, pantallas ni reglas administrativas que no estén especificadas.
+- **Validar disponibilidad del dron** y **Validar reglas de misión:** expresan las comprobaciones obligatorias del flujo de registro. Las reglas existentes incluyen batería mínima según el tipo de carga y pertenencia del destino al catálogo del campus.
+- **Consultar cantidad de drones con batería crítica:** representa el conteo disponible en la consulta de flota; no implica el envío de una alerta automática.
+
+El MVP se implementa como lógica de dominio local, sin presuponer interfaz gráfica ni servicio de red. El catálogo de destinos vigente es fijo en el validador; el caso administrativo se muestra al nivel de responsabilidad exigido, sin afirmar que ya exista una interfaz para modificarlo.
+
+## Relación «include»
+
+**Registrar misión** incluye **Validar disponibilidad del dron** y **Validar reglas de misión**. Son comportamientos obligatorios: el registro requiere que la estrategia encuentre un dron disponible y que la misión satisfaga las validaciones de batería y destino antes de guardarse.
+
+## Relación «extend»
+
+**Consultar cantidad de drones con batería crítica** extiende **Consultar flota disponible** únicamente cuando hay drones con batería inferior al 20 %. La condición corresponde al umbral que usa la consulta existente para contar baterías críticas. La extensión no representa una notificación automática ni cambia los umbrales de validación de SC-01.
+
+## Justificación del modelo
+
+El diagrama centra el flujo en SC-01 y separa sus comprobaciones obligatorias de las consultas que pueden realizar los actores. Conserva los roles y casos de uso solicitados, reutiliza las reglas y consultas presentes en Chimchar y limita la extensión a la condición de batería crítica que el dominio ya contempla. No presupone interfaces, integraciones ni automatizaciones, y presenta las responsabilidades administrativas únicamente con el alcance establecido para el MVP.
