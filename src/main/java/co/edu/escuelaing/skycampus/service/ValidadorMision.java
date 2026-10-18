@@ -1,6 +1,7 @@
 package co.edu.escuelaing.skycampus.service;
 
 import co.edu.escuelaing.skycampus.domain.Drone;
+import co.edu.escuelaing.skycampus.domain.DestinoInvalidoException;
 
 import java.util.Set;
 
@@ -20,7 +21,7 @@ public class ValidadorMision {
 
     public void validarDestino(String destino) {
         if (destino == null || !DESTINOS_VALIDOS.contains(destino)) {
-            throw new IllegalArgumentException("El destino no existe en el campus: " + destino);
+            throw new DestinoInvalidoException("El destino no existe en el campus: " + destino);
         }
     }
 

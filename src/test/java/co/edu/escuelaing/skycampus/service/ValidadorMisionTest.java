@@ -1,6 +1,8 @@
 package co.edu.escuelaing.skycampus.service;
 
 import co.edu.escuelaing.skycampus.domain.Drone;
+import co.edu.escuelaing.skycampus.domain.DestinoInvalidoException;
+import co.edu.escuelaing.skycampus.enumeration.EstadoDrone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,12 +21,12 @@ class ValidadorMisionTest {
 
     @Test
     void bateriaDeTreintaPorCientoEsSuficiente() {
-        assertTrue(validador.tieneBateriaSuficiente(drone(30, true)));
+        assertTrue(validador.tieneBateriaSuficiente(drone(30, EstadoDrone.DISPONIBLE)));
     }
 
     @Test
     void bateriaMenorAlMinimoNoEsSuficiente() {
-        assertFalse(validador.tieneBateriaSuficiente(drone(29, true)));
+        assertFalse(validador.tieneBateriaSuficiente(drone(29, EstadoDrone.DISPONIBLE)));
     }
 
     @Test
@@ -39,24 +41,34 @@ class ValidadorMisionTest {
 
     @Test
     void destinoDesconocidoNoEsValido() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(DestinoInvalidoException.class,
                 () -> validador.validarDestino("Edificio Inexistente"));
     }
 
     @Test
     void destinoNuloNoEsValido() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(DestinoInvalidoException.class,
                 () -> validador.validarDestino(null));
     }
 
     @Test
     void droneDisponiblePuedeUsarse() {
-        assertTrue(validador.droneEstaDisponible(drone(80, true)));
+        assertTrue(validador.droneEstaDisponible(drone(80, EstadoDrone.DISPONIBLE)));
     }
 
     @Test
-    void droneNoDisponibleNoPuedeUsarse() {
-        assertFalse(validador.droneEstaDisponible(drone(80, false)));
+    void droneEnVueloNoPuedeUsarse() {
+        assertFalse(validador.droneEstaDisponible(drone(80, EstadoDrone.EN_VUELO)));
+    }
+
+    @Test
+    void droneEnCargaNoPuedeUsarse() {
+        assertFalse(validador.droneEstaDisponible(drone(80, EstadoDrone.EN_CARGA)));
+    }
+
+    @Test
+    void droneEnFalloNoPuedeUsarse() {
+        assertFalse(validador.droneEstaDisponible(drone(80, EstadoDrone.FALLO)));
     }
 
     @Test
@@ -64,7 +76,7 @@ class ValidadorMisionTest {
         assertFalse(validador.droneEstaDisponible(null));
     }
 
-    private Drone drone(int bateria, boolean disponible) {
-        return new Drone("D-01", "DJI Mini 3", bateria, disponible, "Bloque A");
+    private Drone drone(int bateria, EstadoDrone estado) {
+        return new Drone("D-01", "DJI Mini 3", bateria, estado, "Bloque A");
     }
 }
